@@ -3,8 +3,8 @@ from workers import WorkerEntrypoint
 import json
 
 # Absolute path resolution inside Cloudflare bundles
-from src.crawler import handle_crawl
-from src.search import handle_search
+from crawler import handle_crawl
+from search import handle_search
 
 class Default(WorkerEntrypoint):
     async def fetch(self, request):
