@@ -1,4 +1,5 @@
-from js import Response, Headers, json, fetch
+from js import Response, Headers, fetch
+import json
 import math
 import re
 from collections import Counter
