@@ -1,5 +1,5 @@
-from workers import WorkerEntrypoint, Response
-from js import Headers, fetch
+from js import Response, Headers, fetch
+from workers import WorkerEntrypoint
 import json
 import math
 import re
