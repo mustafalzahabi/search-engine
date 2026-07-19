@@ -10,4 +10,5 @@ database_id = "6ff2c7b4-ea07-42a4-8c5d-7f3dac79dea8"
 
 [[rules]]
 type = "Text"
-globs = ["frontend/*.html", "frontend/*.css", "frontend/*.js"]
+globs = ["src/*.html", "src/*.css", "src/*.js"]
+fallthrough = true
