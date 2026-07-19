@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vector Space Engine UI</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; background: #f8f9fa; color: #212529; }
+        .search-box { display: flex; gap: 10px; margin-bottom: 25px; }
+        input { flex: 1; padding: 12px; font-size: 16px; border: 1px solid #ced4da; border-radius: 6px; }
+        button { padding: 12px 24px; background: #0d6efd; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        button:hover { background: #0b5ed7; }
+        .result-item { background: white; padding: 16px; margin-bottom: 12px; border-radius: 6px; border: 1px solid #dee2e6; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .metrics { font-size: 13px; color: #6c757d; margin-top: 6px; }
+        #status { color: #6c757d; margin-bottom: 15px; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <h2>Edge Relational Vector Search</h2>
+    <div class="search-box">
+        <input type="text" id="queryInput" placeholder="Enter terms separated by space...">
+        <button onclick="runSearch()">Search</button>
+    </div>
+    <div id="status">Ready for query execution.</div>
+    <div id="results"></div>
+
+    <script>
+        // Replace this string with your live Cloudflare Pages/Worker URL once deployed
+        const WORKER_URL = "https://edge-search-api.yoursubdomain.workers.dev";
+
+        async function runSearch() {
+            const query = document.getElementById('queryInput').value.trim();
+            const resultsDiv = document.getElementById('results');
+            const statusDiv = document.getElementById('status');
+            
+            if (!query) return;
+
+            resultsDiv.innerHTML = "";
+            statusDiv.innerText = "Querying worker models directly at the edge...";
+
+            try {
+                const response = await fetch(`${WORKER_URL}?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                statusDiv.innerText = "Execution completed.";
+
+                if (data.error) {
+                    resultsDiv.innerHTML = `<p style="color: #dc3545;">${data.error}</p>`;
+                    return;
+                }
+
+                if (!data.results || data.results.length === 0) {
+                    resultsDiv.innerHTML = "<p>No matching candidate records containing all query terms.</p>";
+                    return;
+                }
+
+                data.results.forEach((res, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'result-item';
+                    item.innerHTML = `
+                        <strong>Rank ${index + 1}: ${res.name}</strong>
+                        <div class="metrics">Cosine Similarity: ${res.cosine.toFixed(4)} | Simpson Overlap: ${res.simpson.toFixed(3)}</div>
+                    `;
+                    resultsDiv.appendChild(item);
+                });
+
+            } catch (err) {
+                statusDiv.innerText = "Error encountered.";
+                resultsDiv.innerHTML = "<p style='color: #dc3545;'>Failed to reach edge server pipelines.</p>";
+                console.error(err);
+            }
+        }
+    </script>
+</body>
+</html>
