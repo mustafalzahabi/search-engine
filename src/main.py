@@ -9,9 +9,7 @@ TOKEN_RE = re.compile(r"\W+")
 def tokenize(text):
     return [t.lower().strip() for t in TOKEN_RE.split(text) if t and len(t) > 0]
 
-# Helper function to extract text and links from raw HTML using standard regexes
 def parse_html(html, base_url):
-    # Extract body text content by removing scripts, styles, and tags
     body_match = re.search(r"<body[^>]*>(.*?)</body>", html, re.IGNORECASE | re.DOTALL)
     body_content = body_match.group(1) if body_match else html
     
@@ -19,11 +17,10 @@ def parse_html(html, base_url):
     clean_text = re.sub(r"<style[^>]*>.*?</style>", " ", clean_text, flags=re.IGNORECASE | re.DOTALL)
     clean_text = re.sub(r"<[^>]+>", " ", clean_text)
     
-    # Extract outbound links
     links = set()
     for match in re.finditer(r'href=["\'](https?://[^"\']+)["\']', html, re.IGNORECASE):
         url = match.group(1)
-        if url.startswith(base_url) or "example.com" in url: # Boundary constraints
+        if url.startswith(base_url) or "example.com" in url:
             links.add(url)
             
     return clean_text, list(links)
@@ -32,7 +29,6 @@ async def handle_crawl(url_to_crawl, env):
     if not url_to_crawl:
         return {"error": "No URL provided to crawl"}
 
-    # Clean old index runs out of the D1 tables
     await env.DB.prepare("DROP TABLE IF EXISTS DocumentDictionary").run()
     await env.DB.prepare("DROP TABLE IF EXISTS TermDictionary").run()
     await env.DB.prepare("DROP TABLE IF EXISTS Posting").run()
@@ -46,7 +42,7 @@ async def handle_crawl(url_to_crawl, env):
     doc_tokens = {}
     global_term_df = Counter()
     doc_id_counter = 1
-    max_pages = 3  # Safe scaling limit for worker execution windows
+    max_pages = 3
 
     while pages_to_crawl and len(visited_docs) < max_pages:
         current_url = pages_to_crawl.pop(0)
@@ -76,14 +72,13 @@ async def handle_crawl(url_to_crawl, env):
                     pages_to_crawl.append(link)
                     
             doc_id_counter += 1
-        except Exception as e:
+        except Exception:
             continue
 
     N = len(visited_docs)
     if N == 0:
         return {"error": "Could not access or parse target root URL."}
 
-    # Map unique discovered words to IDs
     term_ids = {}
     term_id_counter = 1
     for term in global_term_df.keys():
@@ -92,7 +87,6 @@ async def handle_crawl(url_to_crawl, env):
             .bind(term_id_counter, term).run()
         term_id_counter += 1
 
-    # Map inverted matrix posting metrics
     for docid, tokens in doc_tokens.items():
         tf_counts = Counter(tokens)
         for term, tf_count in tf_counts.items():
@@ -172,6 +166,7 @@ async def handle_search(query_param, env):
     results.sort(key=lambda x: x["cosine"], reverse=True)
     return {"results": results[:20]}
 
+# --- NATIVE CLOUDFLARE WORKER ENTRANCE CLASS ---
 class Worker:
     def __init__(self, env):
         self.env = env
@@ -206,7 +201,3 @@ class Worker:
             return Response.new(json.dumps(res_data), headers=headers)
 
         return Response.new(json.dumps({"error": "Invalid endpoint parameters specified."}), headers=headers)
-
-# Standard entry point exports satisfying Cloudflare API version handlers
-async def on_fetch(request, env, ctx):
-    return await Worker(env).fetch(request)
