@@ -1,4 +1,5 @@
-from js import Response, Headers, fetch
+from workers import WorkerEntrypoint, Response
+from js import Headers, fetch
 import json
 import math
 import re
@@ -9,6 +10,7 @@ TOKEN_RE = re.compile(r"\W+")
 def tokenize(text):
     return [t.lower().strip() for t in TOKEN_RE.split(text) if t and len(t) > 0]
 
+# Helper function to extract text and links from raw HTML using standard regexes
 def parse_html(html, base_url):
     body_match = re.search(r"<body[^>]*>(.*?)</body>", html, re.IGNORECASE | re.DOTALL)
     body_content = body_match.group(1) if body_match else html
@@ -166,11 +168,8 @@ async def handle_search(query_param, env):
     results.sort(key=lambda x: x["cosine"], reverse=True)
     return {"results": results[:20]}
 
-# --- NATIVE CLOUDFLARE WORKER ENTRANCE CLASS ---
-class Worker:
-    def __init__(self, env):
-        self.env = env
-
+# --- NATIVE ENTRYPOINT CLASS REQUIRED BY CLOUDFLARE ---
+class Default(WorkerEntrypoint):
     async def fetch(self, request):
         headers = Headers.new()
         headers.set("Access-Control-Allow-Origin", "*")
