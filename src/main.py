@@ -32,30 +32,30 @@ class Default(WorkerEntrypoint):
             res_data = await handle_search(query_str, self.env)
             return Response.new(json.dumps(res_data), headers=headers)
 
-        # 2. Static Frontend Asset Routing Router Loops
+        # 2. Static Frontend Asset Routing - Flattened Paths
         try:
-            # Route individual CSS stylesheet asset linking requests
+            # Route individual CSS stylesheet
             if path == "/style.css":
                 headers.set("Content-Type", "text/css; charset=utf-8")
-                with open("frontend/style.css", "r") as f:
+                with open("style.css", "r") as f:
                     return Response.new(f.read(), headers=headers)
 
-            # Route separated functional client JS application modules
+            # Route client JS application modules
             elif path == "/app.js":
                 headers.set("Content-Type", "application/javascript; charset=utf-8")
-                with open("frontend/app.js", "r") as f:
+                with open("app.js", "r") as f:
                     return Response.new(f.read(), headers=headers)
 
-            # Serve structural base index.html page mapping markup on root (/) or default requests
+            # Serve base HTML page on root (/) or direct requests
             elif path == "/" or path == "/index.html":
                 headers.set("Content-Type", "text/html; charset=utf-8")
-                with open("frontend/index.html", "r") as f:
+                with open("index.html", "r") as f:
                     return Response.new(f.read(), headers=headers)
 
         except Exception as err:
             headers.set("Content-Type", "application/json")
             return Response.new(json.dumps({"error": f"Asset routing read failure: {str(err)}"}), headers=headers)
 
-        # Throw generic catch exception if an unmapped route parameter is target hit
+        # Catch-all if an unmapped route is hit
         headers.set("Content-Type", "application/json")
         return Response.new(json.dumps({"error": "Resource asset path not found."}), headers=headers)
