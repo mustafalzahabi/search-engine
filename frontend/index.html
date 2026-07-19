@@ -3,109 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search Engine</title>
-    <style>
-        body { font-family: system-ui, sans-serif; max-width: 650px; margin: 40px auto; padding: 20px; background: #fdfdfd; color: #2b2d42; }
-        .panel { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
-        .form-group { display: flex; gap: 10px; margin-top: 10px; }
-        input { flex: 1; padding: 12px; font-size: 15px; border: 1px solid #cbd5e1; border-radius: 6px; }
-        button { padding: 12px 20px; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
-        .btn-crawl { background: #10b981; }
-        .btn-crawl:hover { background: #059669; }
-        .btn-search { background: #3b82f6; }
-        .btn-search:hover { background: #2563eb; }
-        .result-card { background: white; padding: 16px; margin-bottom: 12px; border-radius: 6px; border-left: 4px solid #3b82f6; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .status-txt { margin-top: 8px; font-size: 13px; color: #64748b; font-style: italic; }
-    </style>
+    <title>Edge Vector Engine</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <h2>Edge Web Crawler & Search Pipeline</h2>
+    <h2>Edge Web Crawler & Vector Space Engine</h2>
 
-    <!-- Section A: Data Collection Crawling Controls -->
     <div class="panel">
-        <strong>1. Data Ingestion (Crawl a Site)</strong>
-        <div class="form-group">
-            <input type="text" id="crawlInput" placeholder="Enter target site link (e.g., https://example.com)...">
+        <span class="label">1. Cluster Discovery Pipeline</span>
+        <div class="input-group">
+            <input type="text" id="crawlInput" placeholder="Enter target site URL (e.g., https://example.com)">
             <button class="btn-crawl" onclick="executeCrawl()">Crawl & Index</button>
         </div>
-        <div id="crawlStatus" class="status-txt">No active crawl jobs running.</div>
+        <div id="crawlStatus" class="status">System idle. Ready to analyze mapping arrays.</div>
     </div>
 
-    <!-- Section B: Live Metrics Query Execution Interface -->
     <div class="panel">
-        <strong>2. Dynamic Vector Search</strong>
-        <div class="form-group">
-            <input type="text" id="searchInput" placeholder="Enter query keywords...">
-            <button class="btn-search" onclick="executeSearch()">Execute Search</button>
+        <span class="label">2. Search Vector Target</span>
+        <div class="input-group">
+            <input type="text" id="searchInput" placeholder="Enter semantic query tokens...">
+            <button class="btn-search" onclick="executeSearch()">Query Index</button>
         </div>
-        <div id="searchStatus" class="status-txt">Awaiting input query criteria.</div>
+        <div id="searchStatus" class="status">Awaiting query matrix input parameters.</div>
     </div>
 
     <div id="searchResults"></div>
 
-    <script>
-        // Update this line with the URL provided by Cloudflare dashboard after deployment
-        const BASE_API = "https://search-engine.mustafalzahabi2.workers.dev/";
-
-        async function executeCrawl() {
-            const targetUrl = document.getElementById('crawlInput').value.trim();
-            const status = document.getElementById('crawlStatus');
-            if (!targetUrl) return;
-
-            status.innerText = "Initializing spider crawl execution blocks at the edge...";
-            try {
-                const response = await fetch(`${BASE_API}/crawl?url=${encodeURIComponent(targetUrl)}`);
-                const data = await response.json();
-                if (data.error) {
-                    status.innerText = `Crawl Pipeline Failure: ${data.error}`;
-                } else {
-                    status.innerText = `Success! Discovered and built TF-IDF mapping models across ${data.pages_crawled} linked pages.`;
-                }
-            } catch (err) {
-                status.innerText = "Error connecting to backend execution environments.";
-            }
-        }
-
-        async function executeSearch() {
-            const query = document.getElementById('searchInput').value.trim();
-            const status = document.getElementById('searchStatus');
-            const resultsView = document.getElementById('searchResults');
-            if (!query) return;
-
-            resultsView.innerHTML = "";
-            status.innerText = "Computing vector lengths and spatial overlaps...";
-
-            try {
-                const response = await fetch(`${BASE_API}/search?q=${encodeURIComponent(query)}`);
-                const data = await response.json();
-                status.innerText = "Search processing complete.";
-
-                if (data.error) {
-                    resultsView.innerHTML = `<p style="color: #ef4444;">${data.error}</p>`;
-                    return;
-                }
-
-                if (!data.results || data.results.length === 0) {
-                    resultsView.innerHTML = "<p>Zero document structures matched all query string tokens.</p>";
-                    return;
-                }
-
-                data.results.forEach((res, index) => {
-                    const card = document.createElement('div');
-                    card.className = 'result-card';
-                    card.innerHTML = `
-                        <strong>Rank ${index + 1}: <a href="${res.name}" target="_blank">${res.name}</a></strong>
-                        <div style="font-size: 13px; color: #64748b; margin-top: 6px;">
-                            Cosine Similarity Metric Score: <b>${res.cosine.toFixed(4)}</b> | Simpson Overlap Coefficient: <b>${res.simpson.toFixed(3)}</b>
-                        </div>
-                    `;
-                    resultsView.appendChild(card);
-                });
-            } catch (err) {
-                status.innerText = "Failed to query the edge search architecture endpoints.";
-            }
-        }
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>
