@@ -18,6 +18,7 @@ class Default(WorkerEntrypoint):
         url_obj = URL.new(request.url)
         path = url_obj.pathname
 
+        # 1. API Endpoints
         if path.rstrip("/") == "/crawl":
             headers.set("Content-Type", "application/json")
             target_url = url_obj.searchParams.get("url")
@@ -30,5 +31,6 @@ class Default(WorkerEntrypoint):
             res_data = await handle_search(query_str, self.env)
             return Response.new(json.dumps(res_data), headers=headers)
 
-        # If a request falls through to here, let Cloudflare serve the static asset
-        return Response.new(json.dumps({"error": "Not Found"}), status=404)
+        # 2. Native Static Asset Fallback
+        # If the path isn't /crawl or /search, let the environment fetch from the front-end folder
+        return await self.env.ASSETS.fetch(request)
