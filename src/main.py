@@ -172,33 +172,37 @@ async def handle_search(query_param, env):
     results.sort(key=lambda x: x["cosine"], reverse=True)
     return {"results": results[:20]}
 
-async def on_fetch(request, env, ctx):
-    headers = Headers.new()
-    headers.set("Access-Control-Allow-Origin", "*")
-    headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-    headers.set("Access-Control-Allow-Headers", "*")
-    headers.set("Content-Type", "application/json")
-    
-    if request.method == "OPTIONS":
-        return Response.new("", headers=headers)
+class Worker:
+    def __init__(self, env):
+        self.env = env
 
-    url = request.url
-    if "/crawl" in url and "?" in url:
-        params = url.split("?")[1].split("&")
-        target_url = ""
-        for p in params:
-            if p.startswith("url="):
-                target_url = p.split("=")[1].replace("%3A", ":").replace("%2F", "/")
-        res_data = await handle_crawl(target_url, env)
-        return Response.new(json.stringify(res_data), headers=headers)
+    async def fetch(self, request):
+        headers = Headers.new()
+        headers.set("Access-Control-Allow-Origin", "*")
+        headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        headers.set("Access-Control-Allow-Headers", "*")
+        headers.set("Content-Type", "application/json")
         
-    elif "/search" in url and "?" in url:
-        params = url.split("?")[1].split("&")
-        query_str = ""
-        for p in params:
-            if p.startswith("q="):
-                query_str = p.split("=")[1].replace("%20", " ").replace("+", " ")
-        res_data = await handle_search(query_str, env)
-        return Response.new(json.stringify(res_data), headers=headers)
+        if request.method == "OPTIONS":
+            return Response.new("", headers=headers)
 
-    return Response.new(json.stringify({"error": "Invalid endpoint parameters specified."}), headers=headers)
+        url = request.url
+        if "/crawl" in url and "?" in url:
+            params = url.split("?")[1].split("&")
+            target_url = ""
+            for p in params:
+                if p.startswith("url="):
+                    target_url = p.split("=")[1].replace("%3A", ":").replace("%2F", "/")
+            res_data = await handle_crawl(target_url, self.env)
+            return Response.new(json.dumps(res_data), headers=headers)
+            
+        elif "/search" in url and "?" in url:
+            params = url.split("?")[1].split("&")
+            query_str = ""
+            for p in params:
+                if p.startswith("q="):
+                    query_str = p.split("=")[1].replace("%20", " ").replace("+", " ")
+            res_data = await handle_search(query_str, self.env)
+            return Response.new(json.dumps(res_data), headers=headers)
+
+        return Response.new(json.dumps({"error": "Invalid endpoint parameters specified."}), headers=headers)
