@@ -1,8 +1,7 @@
-from js import Response, Headers, fetch, URL
+from js import Response, Headers, URL
 from workers import WorkerEntrypoint
 import json
 
-# Absolute path resolution inside Cloudflare bundles
 from crawler import handle_crawl
 from search import handle_search
 
@@ -18,17 +17,22 @@ class Default(WorkerEntrypoint):
             return Response.new("", headers=headers)
 
         url_obj = URL.new(request.url)
-        path = url_obj.pathname
-        params = url_obj.searchParams
+        path = url_obj.pathname.rstrip("/")
 
-        if path.rstrip("/") == "/crawl":
-            target_url = params.get("url")
+        # Route operational endpoints
+        if path == "/crawl":
+            target_url = url_obj.searchParams.get("url")
             res_data = await handle_crawl(target_url, self.env)
             return Response.new(json.dumps(res_data), headers=headers)
             
-        elif path.rstrip("/") == "/search":
-            query_str = params.get("q") or ""
+        elif path == "/search":
+            query_str = url_obj.searchParams.get("q") or ""
             res_data = await handle_search(query_str, self.env)
             return Response.new(json.dumps(res_data), headers=headers)
 
-        return Response.new(json.dumps({"error": "Endpoint route not found"}), headers=headers, status=404)
+        # Catch root / or unknown paths cleanly without crashing the Worker environment
+        fallback_data = {
+            "status": "online",
+            "message": "Edge Vector API running successfully. Access endpoints via /crawl or /search."
+        }
+        return Response.new(json.dumps(fallback_data), headers=headers)
