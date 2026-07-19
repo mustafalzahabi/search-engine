@@ -206,3 +206,7 @@ class Worker:
             return Response.new(json.dumps(res_data), headers=headers)
 
         return Response.new(json.dumps({"error": "Invalid endpoint parameters specified."}), headers=headers)
+
+# Standard entry point exports satisfying Cloudflare API version handlers
+async def on_fetch(request, env, ctx):
+    return await Worker(env).fetch(request)
