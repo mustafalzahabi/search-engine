@@ -1,7 +1,11 @@
 from js import Response, Headers, URL
 from workers import WorkerEntrypoint
 import json
-import os
+
+# Cloudflare Python Workers import text rule files directly as string modules
+import index as html_asset
+import style as css_asset
+import app as js_asset
 
 from crawler import handle_crawl
 from search import handle_search
@@ -32,29 +36,26 @@ class Default(WorkerEntrypoint):
             res_data = await handle_search(query_str, self.env)
             return Response.new(json.dumps(res_data), headers=headers)
 
-        # 2. Static Frontend Asset Routing - Flattened Paths
+        # 2. Static Frontend Asset Routing - Module Namespace Exports
         try:
             # Route individual CSS stylesheet
             if path == "/style.css":
                 headers.set("Content-Type", "text/css; charset=utf-8")
-                with open("style.css", "r") as f:
-                    return Response.new(f.read(), headers=headers)
+                return Response.new(css_asset.default, headers=headers)
 
             # Route client JS application modules
             elif path == "/app.js":
                 headers.set("Content-Type", "application/javascript; charset=utf-8")
-                with open("app.js", "r") as f:
-                    return Response.new(f.read(), headers=headers)
+                return Response.new(js_asset.default, headers=headers)
 
             # Serve base HTML page on root (/) or direct requests
             elif path == "/" or path == "/index.html":
                 headers.set("Content-Type", "text/html; charset=utf-8")
-                with open("index.html", "r") as f:
-                    return Response.new(f.read(), headers=headers)
+                return Response.new(html_asset.default, headers=headers)
 
         except Exception as err:
             headers.set("Content-Type", "application/json")
-            return Response.new(json.dumps({"error": f"Asset routing read failure: {str(err)}"}), headers=headers)
+            return Response.new(json.dumps({"error": f"Asset routing conversion failure: {str(err)}"}), headers=headers)
 
         # Catch-all if an unmapped route is hit
         headers.set("Content-Type", "application/json")
