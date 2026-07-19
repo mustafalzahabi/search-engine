@@ -8,4 +8,4 @@ python_workers = true
 [[d1_databases]]
 binding = "DB"
 database_name = "search-index-db"
-database_id = "PASTE_YOUR_CLOUDFLARE_D1_DATABASE_ID_HERE"
+database_id = "6ff2c7b4-ea07-42a4-8c5d-7f3dac79dea8"
