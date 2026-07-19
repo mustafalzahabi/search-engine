@@ -169,6 +169,8 @@ async def handle_search(query_param, env):
     return {"results": results[:20]}
 
 # --- NATIVE ENTRYPOINT CLASS REQUIRED BY CLOUDFLARE ---
+from js import URL
+
 class Default(WorkerEntrypoint):
     async def fetch(self, request):
         headers = Headers.new()
@@ -180,22 +182,18 @@ class Default(WorkerEntrypoint):
         if request.method == "OPTIONS":
             return Response.new("", headers=headers)
 
-        url = request.url
-        if "/crawl" in url and "?" in url:
-            params = url.split("?")[1].split("&")
-            target_url = ""
-            for p in params:
-                if p.startswith("url="):
-                    target_url = p.split("=")[1].replace("%3A", ":").replace("%2F", "/")
+        # Use standard robust URL object parsing instead of raw string splitting
+        url_obj = URL.new(request.url)
+        path = url_obj.pathname
+        params = url_obj.searchParams
+
+        if path.rstrip("/") == "/crawl":
+            target_url = params.get("url")
             res_data = await handle_crawl(target_url, self.env)
             return Response.new(json.dumps(res_data), headers=headers)
             
-        elif "/search" in url and "?" in url:
-            params = url.split("?")[1].split("&")
-            query_str = ""
-            for p in params:
-                if p.startswith("q="):
-                    query_str = p.split("=")[1].replace("%20", " ").replace("+", " ")
+        elif path.rstrip("/") == "/search":
+            query_str = params.get("q") or ""
             res_data = await handle_search(query_str, self.env)
             return Response.new(json.dumps(res_data), headers=headers)
 
