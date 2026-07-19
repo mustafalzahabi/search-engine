@@ -1,10 +1,10 @@
-from workers import WorkerEntrypoint, Response
-from js import Headers, URL
+from js import Response, Headers, fetch, URL
+from workers import WorkerEntrypoint
 import json
 
-# Modular component routing imports
-from crawler import handle_crawl
-from search import handle_search
+# Absolute path resolution inside Cloudflare bundles
+from src.crawler import handle_crawl
+from src.search import handle_search
 
 class Default(WorkerEntrypoint):
     async def fetch(self, request):
