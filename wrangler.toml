@@ -3,12 +3,10 @@ main = "src/main.py"
 compatibility_date = "2026-07-19"
 compatibility_flags = [ "python_workers", "disable_python_external_sdk" ]
 
+[assets]
+directory = "./public"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "search-index-db"
 database_id = "6ff2c7b4-ea07-42a4-8c5d-7f3dac79dea8"
-
-[[rules]]
-type = "Text"
-globs = ["src/*.html", "src/*.css", "src/*.js"]
-fallthrough = true
