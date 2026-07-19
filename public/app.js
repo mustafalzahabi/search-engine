@@ -1,4 +1,4 @@
-const API_ROOT = "https://search-engine.mustafalzahabi2.workers.dev";
+const API_ROOT = window.location.origin;
 
 async function executeCrawl() {
     const targetUrl = document.getElementById('crawlInput').value.trim();
